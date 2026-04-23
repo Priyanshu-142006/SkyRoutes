@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sky Routes - Travel App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: Arial, sans-serif; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .hero-bg {
+      background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1600&q=85');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .card { transition: transform 0.2s, box-shadow 0.2s; }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid #4f46e5;
+    }
+
+    @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+    .page.active { animation: fadein 0.3s ease; }
+
+    .nav-link-active {
+      color: #4f46e5;
+      font-weight: 600;
+      border-bottom: 2px solid #4f46e5;
+    }
+
+    .dest-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .feature-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1e1b4b;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      display: none;
+      z-index: 999;
+      font-size: 14px;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.open { display: flex; }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+<!-- ===== NAVBAR ===== -->
+<nav class="bg-white shadow p-4 flex justify-between items-center">
+  <h1 class="text-2xl font-bold text-indigo-600" style="cursor:pointer" onclick="showPage('home')">
+    Sky Routes
+  </h1>
+  <div class="space-x-5 flex items-center">
+    <a onclick="showPage('home')" id="nav-home" class="cursor-pointer text-gray-600 hover:text-indigo-600">Home</a>
+    <a onclick="showPage('destinations')" id="nav-destinations" class="cursor-pointer text-gray-600 hover:text-indigo-600">Destinations</a>
+    <a onclick="showPage('booking')" id="nav-booking" class="cursor-pointer text-gray-600 hover:text-indigo-600">Book</a>
+    <div id="nav-auth-btn">
+      <a onclick="showPage('login')" id="nav-login" class="cursor-pointer text-gray-600 hover:text-indigo-600">Login</a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ===== HOME PAGE ===== -->
+<div id="page-home" class="page active">
+
+  <!-- Hero -->
+  <div class="hero-bg text-white text-center py-32 px-4 relative">
+    <div class="absolute inset-0 bg-indigo-900 opacity-50"></div>
+    <div class="relative z-10">
+      <h2 class="text-5xl font-bold mb-4">Explore the World</h2>
+      <p class="text-xl mb-2 text-indigo-100">Find great deals on flights and trips</p>
+      <button onclick="showPage('booking')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg text-lg font-medium mr-3">
+        Book Now
+      </button>
+      <button onclick="showPage('destinations')" class="bg-white hover:bg-gray-100 text-indigo-600 px-8 py-3 rounded-lg text-lg font-medium">
+        Browse Destinations
+      </button>
+    </div>
+  </div>
+
+  <!-- Popular Destinations -->
+  <div class="max-w-5xl mx-auto px-4 mt-8 mb-12">
+    <div class="flex justify-between items-center mb-5">
+      <h3 class="text-2xl font-bold text-gray-800">Popular Destinations</h3>
+      <button onclick="showPage('destinations')" class="text-indigo-600 text-sm hover:underline">See all</button>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5" id="home-cards"></div>
+  </div>
+
+</div>
+
+
+<!-- ===== DESTINATIONS PAGE ===== -->
+<div id="page-destinations" class="page">
+
+  <div class="bg-indigo-600 text-white py-10 px-6 text-center">
+    <h2 class="text-3xl font-bold mb-2">All Destinations</h2>
+    <p class="text-indigo-100">Pick where you want to go next</p>
+  </div>
+
+  <div class="bg-white px-6 py-4 flex flex-wrap gap-2 items-center shadow">
+    <span class="text-sm text-gray-500 mr-2">Filter:</span>
+    <button onclick="filterCards(this,'all')" class="filter-btn bg-indigo-600 text-white px-3 py-1 rounded text-sm">All</button>
+    <button onclick="filterCards(this,'beach')" class="filter-btn bg-white border text-gray-600 px-3 py-1 rounded text-sm hover:bg-indigo-50">Beach</button>
+    <button onclick="filterCards(this,'mountain')" class="filter-btn bg-white border text-gray-600 px-3 py-1 rounded text-sm hover:bg-indigo-50">Mountain</button>
+    <button onclick="filterCards(this,'city')" class="filter-btn bg-white border text-gray-600 px-3 py-1 rounded text-sm hover:bg-indigo-50">City</button>
+    <button onclick="filterCards(this,'adventure')" class="filter-btn bg-white border text-gray-600 px-3 py-1 rounded text-sm hover:bg-indigo-50">Adventure</button>
+    <input type="text" placeholder="Search..." oninput="searchCards(this.value)" class="border rounded px-3 py-1 text-sm ml-auto w-44" />
+  </div>
+
+  <div class="max-w-5xl mx-auto px-4 mt-8 mb-12">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5" id="dest-cards"></div>
+  </div>
+
+</div>
+
+
+<!-- ===== BOOKING PAGE ===== -->
+<div id="page-booking" class="page">
+
+  <div class="bg-indigo-600 py-8 px-6 text-white text-center">
+    <h2 class="text-3xl font-bold">Book Your Trip</h2>
+    <p class="text-indigo-200 mt-1">Fill in the details below</p>
+  </div>
+
+  <div class="max-w-3xl mx-auto px-4 py-8">
+
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h3 class="font-bold text-lg mb-4 text-gray-700">Flight Details</h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">From *</label>
+          <input type="text" id="b-from" placeholder="Departure city" class="border rounded w-full px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">To *</label>
+          <input type="text" id="b-to" placeholder="Destination" class="border rounded w-full px-3 py-2" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Departure Date *</label>
+          <input type="date" id="b-dep" class="border rounded w-full px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Return Date (optional)</label>
+          <input type="date" id="b-ret" class="border rounded w-full px-3 py-2" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Passengers</label>
+          <select id="b-pass" onchange="updatePrice()" class="border rounded w-full px-3 py-2">
+            <option>1 Adult</option>
+            <option>2 Adults</option>
+            <option>3 Adults</option>
+            <option>2 Adults + 1 Child</option>
+            <option>2 Adults + 2 Children</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Class</label>
+          <select id="b-class" onchange="updatePrice()" class="border rounded w-full px-3 py-2">
+            <option>Economy</option>
+            <option>Premium Economy</option>
+            <option>Business</option>
+            <option>First Class</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h3 class="font-bold text-lg mb-4 text-gray-700">Your Details</h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">First Name *</label>
+          <input type="text" id="b-fname" placeholder="e.g. Priyanshu" class="border rounded w-full px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Last Name *</label>
+          <input type="text" id="b-lname" placeholder="e.g. Tirkey" class="border rounded w-full px-3 py-2" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Email *</label>
+          <input type="email" id="b-email" placeholder="your@email.com" class="border rounded w-full px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Phone Number</label>
+          <input type="tel" id="b-phone" placeholder="+91 XXXXX XXXXX" class="border rounded w-full px-3 py-2" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm text-gray-600 mb-1">Any special requests?</label>
+        <textarea id="b-note" rows="3" placeholder="e.g. window seat, vegetarian meal..." class="border rounded w-full px-3 py-2 text-sm"></textarea>
+      </div>
+    </div>
+
+    <!-- Price summary -->
+  <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-5 mb-6">
+    <h3 class="font-bold text-gray-700 mb-3">Price Summary</h3>
+
+    <div class="flex justify-between text-sm text-gray-600 mb-2">
+      <span id="flight-label">Flight (Economy x 1)</span>
+      <span>Rs. <span id="flight-price">0</span></span>
+    </div>
+
+    <div class="flex justify-between text-sm text-gray-600 mb-2">
+      <span>Airport taxes</span>
+      <span>Rs. <span id="tax-price">0</span></span>
+    </div>
+
+    <div class="flex justify-between text-sm text-gray-600 mb-3">
+      <span>Service fee</span>
+      <span>Rs. <span id="service-price">0</span></span>
+    </div>
+
+    <hr class="border-indigo-200 mb-3" />
+
+    <div class="flex justify-between font-bold text-gray-800">
+      <span>Total</span>
+      <span class="text-indigo-600">Rs. <span id="total-price">0</span></span>
+    </div>
+  </div>
+
+    <button onclick="submitBooking()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg text-lg font-medium">
+      Confirm Booking
+    </button>
+    <p class="text-xs text-gray-400 text-center mt-2">Free cancellation up to 48 hours before departure</p>
+  </div>
+
+</div>
+
+
+<!-- ===== LOGIN PAGE ===== -->
+<div id="page-login" class="page">
+
+  <div class="min-h-screen flex">
+
+    <!-- left side image -->
+    <div class="hidden md:block w-1/2 relative">
+      <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=900&q=85" alt="Travel" class="w-full h-full object-cover" />
+      <div class="absolute inset-0 bg-indigo-900 opacity-40"></div>
+      <div class="absolute bottom-10 left-8 text-white">
+        <p class="text-2xl font-bold mb-1">Start your journey</p>
+        <p class="text-indigo-200 text-sm">Thousands of destinations waiting for you.</p>
+      </div>
+    </div>
+
+    <!-- right side form -->
+    <div class="w-full md:w-1/2 flex items-center justify-center bg-gray-100 px-8 py-12">
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-8">
+
+        <h2 class="text-2xl font-bold text-indigo-600 mb-1">Sky Routes</h2>
+        <p class="text-gray-400 text-sm mb-6">Sign in to your account</p>
+
+        <div id="login-form">
+          <div class="mb-4">
+            <label class="block text-sm text-gray-600 mb-1">Email address</label>
+            <input type="email" id="login-email" placeholder="you@email.com" class="border rounded w-full px-3 py-2" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm text-gray-600 mb-1">Password</label>
+            <input type="password" id="login-pass" placeholder="Enter your password" class="border rounded w-full px-3 py-2" />
+          </div>
+          <div class="flex justify-between text-sm mb-5">
+            <label class="flex items-center gap-1 text-gray-500"><input type="checkbox" class="mr-1" /> Remember me</label>
+            <a href="#" class="text-indigo-600 hover:underline">Forgot password?</a>
+          </div>
+          <button onclick="doLogin()" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 mb-4">
+            Sign In
+          </button>
+          <p class="text-center text-sm text-gray-500">
+            Don't have an account?
+            <a onclick="toggleAuthMode()" class="text-indigo-600 cursor-pointer hover:underline">Register here</a>
+          </p>
+        </div>
+
+        <div id="register-form" style="display:none">
+          <div class="mb-4">
+            <label class="block text-sm text-gray-600 mb-1">Full Name</label>
+            <input type="text" id="reg-name" placeholder="Your full name" class="border rounded w-full px-3 py-2" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm text-gray-600 mb-1">Email</label>
+            <input type="email" id="reg-email" placeholder="you@email.com" class="border rounded w-full px-3 py-2" />
+          </div>
+          <div class="mb-5">
+            <label class="block text-sm text-gray-600 mb-1">Password</label>
+            <input type="password" id="reg-pass" placeholder="Create a password" class="border rounded w-full px-3 py-2" />
+          </div>
+          <button onclick="doRegister()" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 mb-4">
+            Create Account
+          </button>
+          <p class="text-center text-sm text-gray-500">
+            Already have an account?
+            <a onclick="toggleAuthMode()" class="text-indigo-600 cursor-pointer hover:underline">Sign in</a>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- BOOKING CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4">
+    <h3 class="text-lg font-bold mb-2">Confirm your booking?</h3>
+    <p class="text-gray-500 text-sm mb-5">We will send your ticket details to your email. This cannot be undone.</p>
+    <div class="flex gap-3">
+      <button onclick="closeModal()" class="flex-1 border py-2 rounded hover:bg-gray-50 text-sm">Cancel</button>
+      <button onclick="finalConfirm()" class="flex-1 bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 text-sm">Yes, Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+
+<script>
+
+const destinations = [
+  {
+    name: "Bali",
+    country: "Indonesia",
+    type: "beach",
+    price: "Rs. 45,000",
+    img: "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=700&q=85",
+    desc: "Beautiful beaches, ancient temples, and lush rice terraces."
+  },
+  {
+    name: "Paris",
+    country: "France",
+    type: "city",
+    price: "Rs. 72,000",
+    img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=700&q=80",
+    desc: "The city of love with world-class art, food, and architecture."
+  },
+  {
+    name: "Swiss Alps",
+    country: "Switzerland",
+    type: "mountain",
+    price: "Rs. 95,000",
+    img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=700&q=80",
+    desc: "Breathtaking mountain scenery and snow-covered peaks."
+  },
+  {
+    name: "Kyoto",
+    country: "Japan",
+    type: "city",
+    price: "Rs. 68,000",
+    img: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=700&q=80",
+    desc: "Ancient temples, cherry blossoms, and rich Japanese culture."
+  },
+  {
+    name: "Santorini",
+    country: "Greece",
+    type: "beach",
+    price: "Rs. 88,000",
+    img: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=700&q=80",
+    desc: "White-washed buildings and stunning views over the Aegean Sea."
+  },
+  {
+    name: "Patagonia",
+    country: "Argentina",
+    type: "adventure",
+    price: "Rs. 1,10,000",
+    img: "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=700&q=80",
+    desc: "Wild untouched landscapes and trekking at the end of the world."
+  },
+  {
+    name: "Maldives",
+    country: "Indian Ocean",
+    type: "beach",
+    price: "Rs. 1,20,000",
+    img: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=700&q=80",
+    desc: "Crystal clear water and overwater bungalows like no other place."
+  },
+  {
+    name: "New Zealand",
+    country: "Oceania",
+    type: "adventure",
+    price: "Rs. 1,05,000",
+    img: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=700&q=80",
+    desc: "Dramatic scenery and some of the best outdoor activities in the world."
+  },
+  {
+    name: "Rajasthan",
+    country: "India",
+    type: "city",
+    price: "Rs. 12,000",
+    img: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=700&q=85",
+    desc: "Colourful forts, desert safaris, and royal heritage of India."
+  },
+  {
+    name: "Kerala",
+    country: "India",
+    type: "beach",
+    price: "Rs. 9,500",
+    img: "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=700&q=85",
+    desc: "Tranquil backwaters, green hills, and beautiful coastal villages."
+  },
+  {
+    name: "Manali",
+    country: "India",
+    type: "mountain",
+    price: "Rs. 8,000",
+    img: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=700&q=85",
+    desc: "Snow-capped Himalayan peaks, river valleys, and adventure sports."
+  },
+  {
+    name: "Goa",
+    country: "India",
+    type: "beach",
+    price: "Rs. 7,500",
+    img: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=700&q=85",
+    desc: "Golden beaches, vibrant nightlife, and Portuguese-era churches."
+  },
+  {
+    name: "Ladakh",
+    country: "India",
+    type: "adventure",
+    price: "Rs. 14,000",
+    img: "https://images.unsplash.com/photo-1589182337358-2cb63099350c?w=700&q=85",
+    desc: "High altitude deserts, ancient monasteries, and starry skies."
+  },
+  {
+    name: "Varanasi",
+    country: "India",
+    type: "city",
+    price: "Rs. 6,000",
+    img: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=700&q=85",
+    desc: "One of the world's oldest cities, famous for its ghats on the Ganges."
+  },
+  {
+    name: "Amalfi Coast",
+    country: "Italy",
+    type: "beach",
+    price: "Rs. 82,000",
+    img: "https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?w=700&q=80",
+    desc: "Dramatic cliffs, colourful villages, and the clearest Mediterranean water."
+  },
+  {
+    name: "Banff",
+    country: "Canada",
+    type: "mountain",
+    price: "Rs. 98,000",
+    img: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=700&q=80",
+    desc: "Turquoise lakes surrounded by the Canadian Rockies."
+  },
+  {
+    name: "Cape Town",
+    country: "South Africa",
+    type: "adventure",
+    price: "Rs. 76,000",
+    img: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=700&q=80",
+    desc: "Table Mountain, stunning beaches, and incredible wildlife nearby."
+  }
+];
+
+let activeFilter = 'all';
+let searchVal = '';
+let loggedIn = false;
+let userName = '';
+
+// ── PRICE CALCULATOR ──────────────────────────────────────
+const basePrices = {
+  'Economy': 24500,
+  'Premium Economy': 38000,
+  'Business': 72000,
+  'First Class': 120000
+};
+const passengerCounts = {
+  '1 Adult': 1,
+  '2 Adults': 2,
+  '3 Adults': 3,
+  '2 Adults + 1 Child': 3,
+  '2 Adults + 2 Children': 4
+};
+
+function updatePrice() {
+  const cabinEl = document.getElementById('b-class');
+  const passEl  = document.getElementById('b-pass');
+  if (!cabinEl || !passEl) return;
+
+  const cabin = cabinEl.value;
+  const passOption = passEl.value;
+  const count = passengerCounts[passOption] || 1;
+  const base  = basePrices[cabin] || 24500;
+
+  const flight  = base * count;
+  const tax     = Math.round(flight * 0.12);
+  const service = 800;
+  const total   = flight + tax + service;
+
+  document.getElementById('flight-price').textContent  = flight.toLocaleString('en-IN');
+  document.getElementById('tax-price').textContent     = tax.toLocaleString('en-IN');
+  document.getElementById('service-price').textContent = service.toLocaleString('en-IN');
+  document.getElementById('total-price').textContent   = total.toLocaleString('en-IN');
+  document.getElementById('flight-label').textContent  = `Flight (${cabin} x ${count})`;
+}
+
+// ── PAGE NAVIGATION ───────────────────────────────────────
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+
+  ['home','destinations','booking','login'].forEach(p => {
+    const el = document.getElementById('nav-' + p);
+    if (el) el.classList.remove('nav-link-active');
+  });
+  const activeNav = document.getElementById('nav-' + page);
+  if (activeNav) activeNav.classList.add('nav-link-active');
+
+  window.scrollTo(0, 0);
+
+  if (page === 'home') renderHomeCards();
+  if (page === 'destinations') renderDestCards();
+  if (page === 'booking') updatePrice();
+}
+
+// ── CARD RENDERER ─────────────────────────────────────────
+function makeCard(d) {
+  return `
+    <div class="card bg-white rounded-lg shadow overflow-hidden">
+      <img class="dest-img" src="${d.img}" alt="${d.name}" loading="lazy" />
+      <div class="p-4">
+        <div class="flex justify-between items-start">
+          <div>
+            <h4 class="font-bold text-gray-800 text-lg">${d.name}</h4>
+            <p class="text-sm text-gray-400">${d.country}</p>
+          </div>
+          <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded">${d.type}</span>
+        </div>
+        <p class="text-sm text-gray-500 mt-2 mb-3">${d.desc}</p>
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-indigo-600">${d.price} <span class="text-xs font-normal text-gray-400">/ person</span></span>
+          <button onclick="bookThis('${d.name}')" class="bg-indigo-600 text-white text-sm px-3 py-1 rounded hover:bg-indigo-700">
+            Book
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderHomeCards() {
+  const grid = document.getElementById('home-cards');
+  if (!grid) return;
+  grid.innerHTML = destinations.slice(0, 3).map(d => makeCard(d)).join('');
+}
+
+function renderDestCards() {
+  const grid = document.getElementById('dest-cards');
+  if (!grid) return;
+  const filtered = destinations.filter(d => {
+    const matchFilter = activeFilter === 'all' || d.type === activeFilter;
+    const matchSearch = d.name.toLowerCase().includes(searchVal) || d.country.toLowerCase().includes(searchVal);
+    return matchFilter && matchSearch;
+  });
+  if (filtered.length === 0) {
+    grid.innerHTML = '<p class="text-gray-400 col-span-3 text-center py-10">No destinations found.</p>';
+    return;
+  }
+  grid.innerHTML = filtered.map(d => makeCard(d)).join('');
+}
+
+function filterCards(btn, type) {
+  activeFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.className = b.className.replace('bg-indigo-600 text-white', 'bg-white border text-gray-600');
+  });
+  btn.className = btn.className.replace('bg-white border text-gray-600', 'bg-indigo-600 text-white');
+  renderDestCards();
+}
+
+function searchCards(val) {
+  searchVal = val.toLowerCase();
+  renderDestCards();
+}
+
+function bookThis(name) {
+  document.getElementById('b-to').value = name;
+  showPage('booking');
+  showToast('Destination set to ' + name);
+}
+
+// ── BOOKING ───────────────────────────────────────────────
+function submitBooking() {
+  const fname = document.getElementById('b-fname').value.trim();
+  const lname = document.getElementById('b-lname').value.trim();
+  const email = document.getElementById('b-email').value.trim();
+  const from  = document.getElementById('b-from').value.trim();
+  const to    = document.getElementById('b-to').value.trim();
+  const dep   = document.getElementById('b-dep').value;
+
+  if (!fname || !lname || !email || !from || !to || !dep) {
+    showToast('Please fill all required fields');
+    return;
+  }
+
+  const cabin      = document.getElementById('b-class').value;
+  const passengers = document.getElementById('b-pass').value;
+  const total      = document.getElementById('total-price').textContent;
+
+  fetch("http://localhost:3000/booking", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fname, lname, email, from, to, dep, cabin, passengers, total })
+  })
+  .then(res => res.json())
+  .then(data => {
+    showToast(data.message || 'Booking saved!');
+    document.getElementById('confirm-modal').classList.add('open');
+  })
+  .catch(err => {
+    console.error("Booking error:", err);
+    showToast("Could not connect to server. Please try again.");
+  });
+}
+
+function closeModal() {
+  document.getElementById('confirm-modal').classList.remove('open');
+}
+
+function finalConfirm() {
+  closeModal();
+  ['b-from','b-to','b-fname','b-lname','b-email','b-phone','b-note'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  updatePrice();
+  showToast('Booking confirmed! Check your email for details.');
+  showPage('home');
+}
+
+// ── AUTH ──────────────────────────────────────────────────
+let isRegister = false;
+
+function toggleAuthMode() {
+  isRegister = !isRegister;
+  document.getElementById('login-form').style.display    = isRegister ? 'none'  : 'block';
+  document.getElementById('register-form').style.display = isRegister ? 'block' : 'none';
+}
+
+async function doLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-pass').value;
+
+  if (!email || !password) {
+    showToast('Please enter your email and password');
+    return;
+  }
+
+  try {
+    const res  = await fetch("http://localhost:3000/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      loggedIn = true;
+      userName = data.user.name || data.user.email.split('@')[0];
+      updateNavUser();
+      showToast('Welcome back, ' + userName + '!');
+      showPage('home');
+    } else {
+      showToast(data.message || 'Invalid email or password');
+    }
+  } catch (err) {
+    console.error("Login error:", err);
+    showToast('Could not connect to server. Please try again.');
+  }
+}
+
+async function doRegister() {
+  const name     = document.getElementById('reg-name').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-pass').value;
+
+  if (!name || !email || !password) {
+    showToast('Please fill all fields');
+    return;
+  }
+
+  try {
+    const res  = await fetch("http://localhost:3000/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password })
+    });
+    const data = await res.json();
+    showToast(data.message || 'Account created! You can now sign in.');
+    // switch back to login form after registration
+    isRegister = false;
+    document.getElementById('login-form').style.display    = 'block';
+    document.getElementById('register-form').style.display = 'none';
+    document.getElementById('login-email').value = email;
+  } catch (err) {
+    console.error("Register error:", err);
+    showToast('Could not connect to server. Please try again.');
+  }
+}
+
+// ── NAV USER ─────────────────────────────────────────────
+function updateNavUser() {
+  const area = document.getElementById('nav-auth-btn');
+  if (loggedIn) {
+    area.innerHTML = `
+      <span class="text-gray-600 text-sm">Hi, ${userName}</span>
+      <button onclick="doLogout()" class="ml-3 text-sm text-red-500 hover:underline">Logout</button>
+    `;
+  } else {
+    area.innerHTML = `<a onclick="showPage('login')" id="nav-login" class="cursor-pointer text-gray-600 hover:text-indigo-600">Login</a>`;
+  }
+}
+
+function doLogout() {
+  loggedIn = false;
+  userName = '';
+  updateNavUser();
+  showToast('You have been logged out.');
+  showPage('home');
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+// ── INIT ──────────────────────────────────────────────────
+renderHomeCards();
+updatePrice();
+</script>
+
+
+</body>
+</html>
